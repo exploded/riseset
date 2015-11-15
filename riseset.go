@@ -1,24 +1,8 @@
 /*
 Package riseset calculates the rise and set times for the Sun, Moon and twilight.
 
-Copyright 2015 James McHugh
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-
-GO Program by James McHugh, converted from QBASIC version developed by
-Keith Burnett keith@xylem.demon.co.uk
-http://www.stargazing.net/kepler/moonrise.html
+Go version by James McHugh, converted from QBASIC version developed by
+Keith Burnett http://www.stargazing.net/kepler/moonrise.html
 
 Original QBASIC program adapted and modified from Montenbruck and Pfleger,
 'Astronomy on the personal Computer' 3rd Edition, Springer section 3.8
@@ -63,15 +47,15 @@ Riseset calculates the rise and set time for a given object, date, location and 
 
 Example
 
-object : 1 = Moon
-		 2 = Sun
-		 2 = Nautical twilight
-year   : 2015
-month  : 10
-day    : 21
-zone   : 11.         Time zone in decimal, East is +ve, West is -ve
-glong  : 144.966944  Longitude in decimal, East is +ve, West is -ve
-glat   : -37.816944  Latitude  in decimal, North is +ve, South is -ve
+	object : 1 = Moon
+			 2 = Sun
+			 2 = Nautical twilight
+	year   : 2015
+	month  : 10
+	day    : 21
+	zone   : 11.         Time zone in decimal, East is +ve, West is -ve
+	glong  : 144.966944  Longitude in decimal, East is +ve, West is -ve
+	glat   : -37.816944  Latitude  in decimal, North is +ve, South is -ve
 
 */
 func Riseset(object Object, eventdate time.Time, glong float64, glat float64, zone float64) (results RiseSet) {
