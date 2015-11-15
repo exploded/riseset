@@ -30,7 +30,7 @@ and sunset. More accurate programs say the Sun is always below the horizon on
 this day.
 
 */
-package github.com/exploded/riseset
+package riseset
 
 import (
 	"math"
