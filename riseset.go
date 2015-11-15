@@ -47,9 +47,7 @@ Riseset calculates the rise and set time for a given object, date, location and 
 
 Example
 
-	object : 1 = Moon
-			 2 = Sun
-			 2 = Nautical twilight
+	object : 1 = Moon, 2 = Sun, 2 = Nautical twilight
 	year   : 2015
 	month  : 10
 	day    : 21
@@ -60,7 +58,7 @@ Example
 */
 func Riseset(object Object, eventdate time.Time, glong float64, glat float64, zone float64) (results RiseSet) {
 	sinho := make([]float64, 4)
-	
+
 	day := eventdate.Day()
 	month := int(eventdate.Month())
 	year := eventdate.Year()

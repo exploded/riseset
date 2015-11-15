@@ -60,27 +60,26 @@ func TestRiseset(t *testing.T) {
 
 	// Only using the date part so GMT is okay
 	mytime, _ := time.LoadLocation("GMT")
-		
+
 	for _, tt := range rstests {
-		
+
 		//Moon
-		got := Riseset(1, time.Date(tt.year, time.Month(tt.month), tt.day, 0, 0, 0, 0, mytime), tt.lon,tt.lat,tt.zone)
+		got := Riseset(1, time.Date(tt.year, time.Month(tt.month), tt.day, 0, 0, 0, 0, mytime), tt.lon, tt.lat, tt.zone)
 		if got.Rise != tt.mrise || got.Set != tt.mset {
 			t.Errorf("Riseset(1,%v) == %v, want rise=%v set=%v", tt, got, tt.mrise, tt.mset)
 		}
-		
+
 		//Sun
-		got = Riseset(2, time.Date(tt.year, time.Month(tt.month), tt.day, 0, 0, 0, 0, mytime), tt.lon,tt.lat,tt.zone)
+		got = Riseset(2, time.Date(tt.year, time.Month(tt.month), tt.day, 0, 0, 0, 0, mytime), tt.lon, tt.lat, tt.zone)
 		if got.Rise != tt.srise || got.Set != tt.sset {
 			t.Errorf("Riseset(2,%v) == %v, want rise=%v set=%v", tt, got, tt.srise, tt.sset)
 		}
-		
+
 		//Twilight
-		got = Riseset(3, time.Date(tt.year, time.Month(tt.month), tt.day, 0, 0, 0, 0, mytime), tt.lon,tt.lat,tt.zone)
+		got = Riseset(3, time.Date(tt.year, time.Month(tt.month), tt.day, 0, 0, 0, 0, mytime), tt.lon, tt.lat, tt.zone)
 		if got.Rise != tt.nrise || got.Set != tt.nset {
 			t.Errorf("Riseset(3,%v) == %v, want rise=%v set=%v", tt, got, tt.nrise, tt.nset)
 		}
-		
-		
+
 	}
 }
