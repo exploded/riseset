@@ -22,9 +22,6 @@ import (
 	"time"
 )
 
-var t, ra, dec, ym, y0, yp, xe, ye, z1, z2 float64
-var nz int
-
 /*
 RiseSet holds the rise and set times as strings in the form hh:mm
 */
@@ -57,6 +54,10 @@ Example
 
 */
 func Riseset(object Object, eventdate time.Time, glong float64, glat float64, zone float64) (results RiseSet) {
+
+	var ra, dec, ym, y0, yp, xe, ye, z1, z2 float64
+	var nz int
+
 	sinho := make([]float64, 4)
 
 	day := eventdate.Day()
@@ -85,18 +86,23 @@ func Riseset(object Object, eventdate time.Time, glong float64, glat float64, zo
 	rise := 0
 	sett := 0
 	hour := 1.
-	ym = sinalt(iobj, date, hour-1, glong, cl, sl) - sinho[iobj]
+	ym,ra,dec = sinalt(iobj, date, hour-1, glong, cl, sl, ra, dec) 
+	ym=ym- sinho[iobj]
 
 	for (hour != 25) && (rise*sett != 1) {
-		y0 = sinalt(iobj, date, hour, glong, cl, sl) - sinho[iobj]
-		yp = sinalt(iobj, date, hour+1, glong, cl, sl) - sinho[iobj]
+		y0,ra,dec = sinalt(iobj, date, hour, glong, cl, sl, ra, dec)
+		y0=y0- sinho[iobj]
+		
+		yp,ra,dec = sinalt(iobj, date, hour+1, glong, cl, sl,ra,dec)
+		yp=yp-sinho[iobj]
+
 		xe = 0
 		ye = 0
 		z1 = 0
 		z2 = 0
 		nz = 0
 
-		quad() // Note uses and updates package variables
+		nz,yp,y0,ym,xe,ye,z1,z2 = quad(yp,y0,ym,xe,ye,z1,z2 ) 
 
 		switch nz {
 		//cases depend on values of discriminant
@@ -220,9 +226,9 @@ Returns the local siderial time for the mjd and longitude specified
 func lmst(mjd float64, glong float64) float64 {
 	mjd0 := ipart(mjd)
 	ut := (mjd - mjd0) * 24
-	t := (mjd0 - 51544.5) / 36525
+	mytim := (mjd0 - 51544.5) / 36525
 	gmst := 6.697374558 + 1.0027379093*ut
-	gmst = gmst + (8640184.812866+(.093104-.0000062*t)*t)*t/3600
+	gmst = gmst + (8640184.812866+(.093104-.0000062*mytim)*mytim)*mytim/3600
 	return 24 * fpart((gmst-glong/15)/24)
 }
 
@@ -242,9 +248,9 @@ Finds a parabola through three points and returns values of coordinates of
 extreme value (xe, ye) and zeros if any (z1, z2)
 Assumes that the x values are -1, 0, +1
 */
-func quad() {
+func quad(yp,y0,ym,xe,ye,z1,z2 float64)(int,float64,float64,float64,float64,float64,float64,float64) {
 	var a, b, c float64
-	nz = 0
+	nz := 0
 	a = 0.5*(ym+yp) - y0
 	b = 0.5 * (yp - ym)
 	c = y0
@@ -265,7 +271,7 @@ func quad() {
 			z1 = z2
 		}
 	}
-	return
+	return nz,yp,y0,ym,xe,ye,z1,z2
 }
 
 //Returns SIN of x degrees
@@ -283,29 +289,29 @@ Returns sine of the altitude of either the sun or the moon given the modified
 julian day number at midnight UT and the hour of the UT day, the longitude of
 the observer, and the sine and cosine of the latitude of the observer.
 */
-func sinalt(iobj Object, mjd0 float64, hour float64, glong float64, cphi float64, sphi float64) float64 {
+func sinalt(iobj Object, mjd0 float64, hour float64, glong float64, cphi float64, sphi float64, ra float64, dec float64) (float64,float64,float64) {
 	instant := mjd0 + hour/24.
-	t = (instant - 51544.5) / 36525
+	tim := (instant - 51544.5) / 36525
 	if iobj == 1 {
-		moonsub()
+		ra,dec = moonsub(tim,dec, ra)
 	} else {
-		sun()
+		ra,dec = sun(tim,dec,ra)
 	}
 	tau := 15 * (lmst(instant, glong) - ra) //hour angle of object
-	return sphi*sn(dec) + cphi*cn(dec)*cn(tau)
+	return sphi*sn(dec) + cphi*cn(dec)*cn(tau),ra,dec
 }
 
 /*
 Returns RA and DEC of Sun to roughly 1 arcmin for few hundred years either side
 of J2000.0
 */
-func sun() {
+func sun(tim,dec,ra float64) (float64,float64){
 	p2 := 6.283185307
 	COSEPS := .91748
 	SINEPS := .39778
-	m := p2 * fpart(.993133+99.997361*t)      //Mean anomaly
+	m := p2 * fpart(.993133+99.997361*tim)      //Mean anomaly
 	dL := 6893*math.Sin(m) + 72*math.Sin(2*m) //Eq centre
-	L := p2 * fpart(.7859453+m/p2+(6191.2*t+dL)/1296000)
+	L := p2 * fpart(.7859453+m/p2+(6191.2*tim+dL)/1296000)
 	// convert to RA and DEC - ecliptic latitude of Sun taken zero
 	sl := math.Sin(L)
 	x := math.Cos(L)
@@ -317,7 +323,7 @@ func sun() {
 	if ra < 0 {
 		ra = ra + 24
 	}
-	return
+	return ra,dec
 }
 
 /*
@@ -326,16 +332,18 @@ centuries either side of J2000.0
 Predicts rise and set times to within minutes for about 500 years in past
 TDT and UT time diference may become significant for long times
 */
-func moonsub() {
+
+
+func moonsub( tim,dec, ra float64) (float64,float64){
 	p2 := 6.283185307
 	ARC := 206264.8062
 	COSEPS := .91748
 	SINEPS := .39778
-	L0 := fpart(.606433 + 1336.855225*t)   //mean long Moon in revs
-	L := p2 * fpart(.374897+1325.55241*t)  //mean anomaly of Moon
-	LS := p2 * fpart(.993133+99.997361*t)  //mean anomaly of Sun
-	d := p2 * fpart(.827361+1236.853086*t) //diff longitude sun and moon
-	F := p2 * fpart(.259086+1342.227825*t) //mean arg latitude
+	L0 := fpart(.606433 + 1336.855225*tim)   //mean long Moon in revs
+	L := p2 * fpart(.374897+1325.55241*tim)  //mean anomaly of Moon
+	LS := p2 * fpart(.993133+99.997361*tim)  //mean anomaly of Sun
+	d := p2 * fpart(.827361+1236.853086*tim) //diff longitude sun and moon
+	F := p2 * fpart(.259086+1342.227825*tim) //mean arg latitude
 	// longitude correction terms
 	dL := 22640*math.Sin(L) - 4586*math.Sin(L-2*d)
 	dL = dL + 2370*math.Sin(2*d) + 769*math.Sin(2*L)
@@ -365,5 +373,5 @@ func moonsub() {
 	if ra < 0 {
 		ra = ra + 24
 	}
-	return
+	return ra,dec
 }
