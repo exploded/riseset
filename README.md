@@ -6,3 +6,7 @@ Package riseset is a Go module that calculates the rise and set times for the Su
 Demo website http://mchugh.space/
 
 Documentation https://godoc.org/github.com/exploded/riseset
+
+Licence: MIT
+
+Copyright (c) 2016 James McHugh
