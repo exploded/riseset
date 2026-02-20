@@ -23,11 +23,15 @@ import (
 )
 
 /*
-RiseSet holds the rise and set times as strings in the form hh:mm
+RiseSet holds the rise and set times as strings in the form hh:mm,
+and flags for when the object stays above or below the horizon all day.
+When AlwaysAbove or AlwaysBelow is true, Rise and Set will be "-".
 */
 type RiseSet struct {
-	Rise string
-	Set  string
+	Rise        string
+	Set         string
+	AlwaysAbove bool // object never sets (e.g. midnight sun)
+	AlwaysBelow bool // object never rises (e.g. polar night)
 }
 
 // Object specifies the astronomical object to calculate i.e. Sun, Moon or twilight
@@ -88,6 +92,7 @@ func Riseset(object Object, eventdate time.Time, glong float64, glat float64, zo
 	hour := 1.
 	ym = sinalt(iobj, date, hour-1, glong, cl, sl)
 	ym = ym - sinho[iobj]
+	above := ym > 0 // true if object is above horizon at start of day
 
 	for (hour != 25) && (rise*sett != 1) {
 		y0 = sinalt(iobj, date, hour, glong, cl, sl)
@@ -140,6 +145,11 @@ func Riseset(object Object, eventdate time.Time, glong float64, glat float64, zo
 		results.Set = hm(utset)
 	} else {
 		results.Set = "-"
+	}
+
+	if rise == 0 && sett == 0 {
+		results.AlwaysAbove = above
+		results.AlwaysBelow = !above
 	}
 
 	return
