@@ -44,7 +44,7 @@ Riseset calculates the rise and set time for a given object, date, location and 
 
 Example
 
-	object : 1 = Moon, 2 = Sun, 2 = Nautical twilight
+	object : 1 = Moon, 2 = Sun, 3 = Nautical twilight
 	year   : 2015
 	month  : 10
 	day    : 21
@@ -232,15 +232,16 @@ func lmst(mjd float64, glong float64) float64 {
 	return 24 * fpart((gmst-glong/15)/24)
 }
 
-// Returns fractional part of a number.
+// Returns fractional part of a number, always non-negative.
+// Matches QBASIC FPART(x) = x - INT(x) behaviour.
 func fpart(x float64) float64 {
-	_, x = math.Modf(x) // ignore the integer part
-	return x
+	return x - math.Floor(x)
 }
 
-// Returns the integer part of a number as a float
+// Returns the integer part of a number as a float, flooring toward negative infinity.
+// Matches QBASIC INT() behaviour.
 func ipart(x float64) float64 {
-	return float64(int(x))
+	return math.Floor(x)
 }
 
 /*
@@ -274,12 +275,12 @@ func quad(yp,y0,ym,xe,ye,z1,z2 float64)(int,float64,float64,float64,float64,floa
 	return nz,yp,y0,ym,xe,ye,z1,z2
 }
 
-//Returns SIN of x degrees
+//Returns COS of x degrees
 func cn(x float64) float64 {
 	return math.Cos(x * .0174532925199433)
 }
 
-//Returns COS of x degrees
+//Returns SIN of x degrees
 func sn(x float64) float64 {
 	return math.Sin(x * .0174532925199433)
 }
@@ -358,8 +359,8 @@ func moonsub( tim,dec, ra float64) (float64,float64){
 	// latitude correction terms
 	N := -526*math.Sin(h) + 44*math.Sin(L+h) - 31*math.Sin(h-L) - 23*math.Sin(LS+h)
 	N = N + 11*math.Sin(h-LS) - 25*math.Sin(F-2*L) + 21*math.Sin(F-L)
-	lmoon := p2 * fpart(L0+dL/1296000)     //Lat in rads
-	bmoon := (18520*math.Sin(S) + N) / ARC //long in rads
+	lmoon := p2 * fpart(L0+dL/1296000)     //Long in rads
+	bmoon := (18520*math.Sin(S) + N) / ARC //Lat in rads
 	// convert to equatorial coords using a fixed ecliptic
 	CB := math.Cos(bmoon)
 	x := CB * math.Cos(lmoon)

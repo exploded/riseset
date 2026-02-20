@@ -33,9 +33,50 @@ this day.
 package riseset
 
 import (
+	"math"
 	"testing"
 	"time"
 )
+
+// TestFpart verifies fpart always returns a positive fractional part,
+// matching QBASIC's FPART(x) = x - INT(x) behaviour.
+func TestFpart(t *testing.T) {
+	tests := []struct {
+		input float64
+		want  float64
+	}{
+		{1.5, 0.5},
+		{0.3, 0.3},
+		{-1.3, 0.7},  // QBASIC: -1.3 - floor(-1.3) = -1.3 - (-2) = 0.7
+		{-0.5, 0.5},  // QBASIC: -0.5 - floor(-0.5) = -0.5 - (-1) = 0.5
+	}
+	for _, tt := range tests {
+		got := fpart(tt.input)
+		if math.Abs(got-tt.want) > 1e-10 {
+			t.Errorf("fpart(%v) = %v, want %v", tt.input, got, tt.want)
+		}
+	}
+}
+
+// TestIpart verifies ipart floors toward negative infinity,
+// matching QBASIC's INT() behaviour.
+func TestIpart(t *testing.T) {
+	tests := []struct {
+		input float64
+		want  float64
+	}{
+		{1.5, 1.0},
+		{1.9, 1.0},
+		{-1.5, -2.0}, // QBASIC INT floors: floor(-1.5) = -2
+		{-0.5, -1.0}, // QBASIC INT floors: floor(-0.5) = -1
+	}
+	for _, tt := range tests {
+		got := ipart(tt.input)
+		if got != tt.want {
+			t.Errorf("ipart(%v) = %v, want %v", tt.input, got, tt.want)
+		}
+	}
+}
 
 func TestRiseset(t *testing.T) {
 
