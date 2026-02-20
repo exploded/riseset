@@ -55,7 +55,7 @@ Example
 */
 func Riseset(object Object, eventdate time.Time, glong float64, glat float64, zone float64) (results RiseSet) {
 
-	var ra, dec, ym, y0, yp, xe, ye, z1, z2 float64
+	var ym, y0, yp, xe, ye, z1, z2 float64
 	var nz int
 
 	sinho := make([]float64, 4)
@@ -86,15 +86,15 @@ func Riseset(object Object, eventdate time.Time, glong float64, glat float64, zo
 	rise := 0
 	sett := 0
 	hour := 1.
-	ym,ra,dec = sinalt(iobj, date, hour-1, glong, cl, sl, ra, dec) 
-	ym=ym- sinho[iobj]
+	ym = sinalt(iobj, date, hour-1, glong, cl, sl)
+	ym = ym - sinho[iobj]
 
 	for (hour != 25) && (rise*sett != 1) {
-		y0,ra,dec = sinalt(iobj, date, hour, glong, cl, sl, ra, dec)
-		y0=y0- sinho[iobj]
-		
-		yp,ra,dec = sinalt(iobj, date, hour+1, glong, cl, sl,ra,dec)
-		yp=yp-sinho[iobj]
+		y0 = sinalt(iobj, date, hour, glong, cl, sl)
+		y0 = y0 - sinho[iobj]
+
+		yp = sinalt(iobj, date, hour+1, glong, cl, sl)
+		yp = yp - sinho[iobj]
 
 		xe = 0
 		ye = 0
@@ -146,44 +146,20 @@ func Riseset(object Object, eventdate time.Time, glong float64, glat float64, zo
 }
 
 /*
-Returns calendar date a string in international format given the modified julian
-date.
-BC dates are in calendar format - i.e. no year zero
-Gregorian dates are returned after 1582 Oct 10th
-In English colonies and Sweeden, this does not reflect historical dates.
-*/
-func calday(x float64) string {
-	var b, c, d, e, F, jd, jd0 float64
-	var monthx, dayx, yearx int
-	jd = x + 2400000.5
-	jd0 = ipart(jd + .5)
-	if jd0 < 2299161 {
-		c = jd0 + 1524
-	} else {
-		b = ipart((jd0 - 1867216.25) / 36524.25)
-		c = jd0 + (b - ipart(b/4)) + 1525
-	}
-	d = ipart((c - 122.1) / 365.25)
-	e = 365*d + ipart(d/4.)
-	F = float64(ipart((c - e) / 30.6001))
-	dayx = int(ipart(c-e+.5) - ipart(30.6001*F))
-	monthx = int(F - 1 - 12*ipart(F/14))
-	yearx = int(d - 4715. - ipart((float64(monthx)+7.)/10.))
-	return strconv.Itoa(yearx) + strconv.Itoa(monthx) + strconv.Itoa(dayx)
-}
-
-/*
 Returns string containing the time written in hours and minutes rounded to
 the nearest minute
 */
 func hm(ut float64) (hhmm string) {
 	var ut2 float64
 	ut2 = float64(int(ut*60+0.5)) / 60. //round ut to nearest minute
+	if ut2 >= 24 {
+		ut2 = ut2 - 24
+	}
 	h := int(ut2)
-	month := int(60.*(float64(ut2)-float64(h)) + 0.5)
+	min := int(60.*(ut2-float64(h)) + 0.5)
 
-	hhmm = strconv.Itoa(month)
-	if month < 10 {
+	hhmm = strconv.Itoa(min)
+	if min < 10 {
 		hhmm = "0" + hhmm
 	}
 	hhmm = strconv.Itoa(h) + ":" + hhmm
@@ -255,6 +231,9 @@ func quad(yp,y0,ym,xe,ye,z1,z2 float64)(int,float64,float64,float64,float64,floa
 	a = 0.5*(ym+yp) - y0
 	b = 0.5 * (yp - ym)
 	c = y0
+	if a == 0 { //no curvature - treat as no event in interval
+		return nz, yp, y0, ym, xe, ye, z1, z2
+	}
 	xe = -b / (2 * a)    //x coord of symmetry line
 	ye = (a*xe+b)*xe + c //extreme value for y in interval
 	dis := b*b - 4*a*c   //discriminant
@@ -290,23 +269,24 @@ Returns sine of the altitude of either the sun or the moon given the modified
 julian day number at midnight UT and the hour of the UT day, the longitude of
 the observer, and the sine and cosine of the latitude of the observer.
 */
-func sinalt(iobj Object, mjd0 float64, hour float64, glong float64, cphi float64, sphi float64, ra float64, dec float64) (float64,float64,float64) {
+func sinalt(iobj Object, mjd0 float64, hour float64, glong float64, cphi float64, sphi float64) float64 {
 	instant := mjd0 + hour/24.
 	tim := (instant - 51544.5) / 36525
+	var ra, dec float64
 	if iobj == 1 {
-		ra,dec = moonsub(tim,dec, ra)
+		ra, dec = moonsub(tim)
 	} else {
-		ra,dec = sun(tim,dec,ra)
+		ra, dec = sun(tim)
 	}
 	tau := 15 * (lmst(instant, glong) - ra) //hour angle of object
-	return sphi*sn(dec) + cphi*cn(dec)*cn(tau),ra,dec
+	return sphi*sn(dec) + cphi*cn(dec)*cn(tau)
 }
 
 /*
 Returns RA and DEC of Sun to roughly 1 arcmin for few hundred years either side
 of J2000.0
 */
-func sun(tim,dec,ra float64) (float64,float64){
+func sun(tim float64) (ra, dec float64) {
 	p2 := 6.283185307
 	COSEPS := .91748
 	SINEPS := .39778
@@ -324,7 +304,7 @@ func sun(tim,dec,ra float64) (float64,float64){
 	if ra < 0 {
 		ra = ra + 24
 	}
-	return ra,dec
+	return
 }
 
 /*
@@ -335,7 +315,7 @@ TDT and UT time diference may become significant for long times
 */
 
 
-func moonsub( tim,dec, ra float64) (float64,float64){
+func moonsub(tim float64) (ra, dec float64) {
 	p2 := 6.283185307
 	ARC := 206264.8062
 	COSEPS := .91748
@@ -374,5 +354,5 @@ func moonsub( tim,dec, ra float64) (float64,float64){
 	if ra < 0 {
 		ra = ra + 24
 	}
-	return ra,dec
+	return
 }
