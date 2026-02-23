@@ -1,20 +1,19 @@
 /*
 Package riseset calculates the rise and set times for the Sun, Moon and twilight.
 
-Copyright 2015 James McHugh
+# Copyright 2015 James McHugh
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 
 GO Program by James McHugh, converted from QBASIC version developed by
 Keith Burnett keith@xylem.demon.co.uk
@@ -28,7 +27,6 @@ on the approximate routines used for Sun and Moon. For instance, 1999 Dec 25th,
 at 0 long, 67.43 lat this program will give an 8 minute long day between sunrise
 and sunset. More accurate programs say the Sun is always below the horizon on
 this day.
-
 */
 package riseset
 

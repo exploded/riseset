@@ -12,7 +12,6 @@ on the approximate routines used for Sun and Moon. For instance, 1999 Dec 25th,
 at 0 long, 67.43 lat this program will give an 8 minute long day between sunrise
 and sunset. More accurate programs say the Sun is always below the horizon on
 this day.
-
 */
 package riseset
 
@@ -51,7 +50,6 @@ Example
 	zone   : 11.         Time zone in decimal, East is +ve, West is -ve
 	glong  : 144.966944  Longitude in decimal, East is +ve, West is -ve
 	glat   : -37.816944  Latitude  in decimal, North is +ve, South is -ve
-
 */
 func Riseset(object Object, eventdate time.Time, glong float64, glat float64, zone float64) (results RiseSet) {
 
@@ -86,15 +84,15 @@ func Riseset(object Object, eventdate time.Time, glong float64, glat float64, zo
 	rise := 0
 	sett := 0
 	hour := 1.
-	ym,ra,dec = sinalt(iobj, date, hour-1, glong, cl, sl, ra, dec) 
-	ym=ym- sinho[iobj]
+	ym, ra, dec = sinalt(iobj, date, hour-1, glong, cl, sl, ra, dec)
+	ym = ym - sinho[iobj]
 
 	for (hour != 25) && (rise*sett != 1) {
-		y0,ra,dec = sinalt(iobj, date, hour, glong, cl, sl, ra, dec)
-		y0=y0- sinho[iobj]
-		
-		yp,ra,dec = sinalt(iobj, date, hour+1, glong, cl, sl,ra,dec)
-		yp=yp-sinho[iobj]
+		y0, ra, dec = sinalt(iobj, date, hour, glong, cl, sl, ra, dec)
+		y0 = y0 - sinho[iobj]
+
+		yp, ra, dec = sinalt(iobj, date, hour+1, glong, cl, sl, ra, dec)
+		yp = yp - sinho[iobj]
 
 		xe = 0
 		ye = 0
@@ -102,7 +100,7 @@ func Riseset(object Object, eventdate time.Time, glong float64, glat float64, zo
 		z2 = 0
 		nz = 0
 
-		nz,yp,y0,ym,xe,ye,z1,z2 = quad(yp,y0,ym,xe,ye,z1,z2 ) 
+		nz, yp, y0, ym, xe, ye, z1, z2 = quad(yp, y0, ym, xe, ye, z1, z2)
 
 		switch nz {
 		//cases depend on values of discriminant
@@ -248,7 +246,7 @@ Finds a parabola through three points and returns values of coordinates of
 extreme value (xe, ye) and zeros if any (z1, z2)
 Assumes that the x values are -1, 0, +1
 */
-func quad(yp,y0,ym,xe,ye,z1,z2 float64)(int,float64,float64,float64,float64,float64,float64,float64) {
+func quad(yp, y0, ym, xe, ye, z1, z2 float64) (int, float64, float64, float64, float64, float64, float64, float64) {
 	var a, b, c float64
 	nz := 0
 	a = 0.5*(ym+yp) - y0
@@ -271,15 +269,15 @@ func quad(yp,y0,ym,xe,ye,z1,z2 float64)(int,float64,float64,float64,float64,floa
 			z1 = z2
 		}
 	}
-	return nz,yp,y0,ym,xe,ye,z1,z2
+	return nz, yp, y0, ym, xe, ye, z1, z2
 }
 
-//Returns SIN of x degrees
+// Returns SIN of x degrees
 func cn(x float64) float64 {
 	return math.Cos(x * .0174532925199433)
 }
 
-//Returns COS of x degrees
+// Returns COS of x degrees
 func sn(x float64) float64 {
 	return math.Sin(x * .0174532925199433)
 }
@@ -289,27 +287,27 @@ Returns sine of the altitude of either the sun or the moon given the modified
 julian day number at midnight UT and the hour of the UT day, the longitude of
 the observer, and the sine and cosine of the latitude of the observer.
 */
-func sinalt(iobj Object, mjd0 float64, hour float64, glong float64, cphi float64, sphi float64, ra float64, dec float64) (float64,float64,float64) {
+func sinalt(iobj Object, mjd0 float64, hour float64, glong float64, cphi float64, sphi float64, ra float64, dec float64) (float64, float64, float64) {
 	instant := mjd0 + hour/24.
 	tim := (instant - 51544.5) / 36525
 	if iobj == 1 {
-		ra,dec = moonsub(tim,dec, ra)
+		ra, dec = moonsub(tim, dec, ra)
 	} else {
-		ra,dec = sun(tim,dec,ra)
+		ra, dec = sun(tim, dec, ra)
 	}
 	tau := 15 * (lmst(instant, glong) - ra) //hour angle of object
-	return sphi*sn(dec) + cphi*cn(dec)*cn(tau),ra,dec
+	return sphi*sn(dec) + cphi*cn(dec)*cn(tau), ra, dec
 }
 
 /*
 Returns RA and DEC of Sun to roughly 1 arcmin for few hundred years either side
 of J2000.0
 */
-func sun(tim,dec,ra float64) (float64,float64){
+func sun(tim, dec, ra float64) (float64, float64) {
 	p2 := 6.283185307
 	COSEPS := .91748
 	SINEPS := .39778
-	m := p2 * fpart(.993133+99.997361*tim)      //Mean anomaly
+	m := p2 * fpart(.993133+99.997361*tim)    //Mean anomaly
 	dL := 6893*math.Sin(m) + 72*math.Sin(2*m) //Eq centre
 	L := p2 * fpart(.7859453+m/p2+(6191.2*tim+dL)/1296000)
 	// convert to RA and DEC - ecliptic latitude of Sun taken zero
@@ -323,7 +321,7 @@ func sun(tim,dec,ra float64) (float64,float64){
 	if ra < 0 {
 		ra = ra + 24
 	}
-	return ra,dec
+	return ra, dec
 }
 
 /*
@@ -333,8 +331,7 @@ Predicts rise and set times to within minutes for about 500 years in past
 TDT and UT time diference may become significant for long times
 */
 
-
-func moonsub( tim,dec, ra float64) (float64,float64){
+func moonsub(tim, dec, ra float64) (float64, float64) {
 	p2 := 6.283185307
 	ARC := 206264.8062
 	COSEPS := .91748
@@ -373,5 +370,5 @@ func moonsub( tim,dec, ra float64) (float64,float64){
 	if ra < 0 {
 		ra = ra + 24
 	}
-	return ra,dec
+	return ra, dec
 }
